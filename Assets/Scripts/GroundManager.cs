@@ -1,13 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Hyb.Utils;
 
-public class GroundManager : ManualSingletonMono<GroundManager>
+public class GroundManager : MonoBehaviour
 {
     [SerializeField] private GameObject playerGround; 
     [SerializeField] private int columns = 6; 
     private List<GroundTile> groundTiles = new List<GroundTile>();
     private Dictionary<Vector2Int, GroundTile> gridMap = new Dictionary<Vector2Int, GroundTile>();
+    public static GroundManager Instance;
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
