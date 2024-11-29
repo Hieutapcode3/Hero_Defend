@@ -14,6 +14,10 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     public int _score = 0;
     private int _clickAmount = -1;
 
+    public override void  Awake()
+    {
+        base.Awake();
+    }
     void Start()
     {
         SpawnEnemiesOnFirstRow();

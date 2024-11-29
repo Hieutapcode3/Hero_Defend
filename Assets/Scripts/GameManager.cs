@@ -11,6 +11,7 @@ public class GameManager : ManualSingletonMono<GameManager>
     [SerializeField] private GameObject successPanel;
     [SerializeField] private GameObject losePanel;
     [SerializeField] private GameObject winGamePanel;
+    public bool canDrag;
 
     public override void Awake()
     {
@@ -20,6 +21,14 @@ public class GameManager : ManualSingletonMono<GameManager>
     private void Start()
     {
         Time.timeScale = 1;
+        canDrag = true;
+    }
+    private void Update()
+    {
+        if (!canDrag)
+        {
+            StartCoroutine(ChangeStateDrag());
+        }
     }
 
     public void PlayGame()
@@ -88,5 +97,10 @@ public class GameManager : ManualSingletonMono<GameManager>
         // AudioManager.Instance.PlayAudioFailGame();
         losePanel.SetActive(true);
         Time.timeScale = 0;
+    }
+    private IEnumerator ChangeStateDrag()
+    {
+        yield return new WaitForSeconds(1f);
+        canDrag = true;
     }
 }

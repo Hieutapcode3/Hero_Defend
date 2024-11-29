@@ -1958,6 +1958,7 @@ MonoBehaviour:
   successPanel: {fileID: 0}
   losePanel: {fileID: 0}
   winGamePanel: {fileID: 0}
+  canDrag: 0
 --- !u!4 &494083065
 Transform:
   m_ObjectHideFlags: 0

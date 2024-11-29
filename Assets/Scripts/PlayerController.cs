@@ -10,11 +10,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private SpriteRenderer myWeapon;
     [SerializeField] private List<Sprite> weaponsSprite;
     private Vector3 originalPosition;
-    private Vector3 previousPos;
     private int level = 1;
     private int bulletCount;
     private Animator anim;
-    private bool canDrag;
+    private bool isMouseDown;
+    private int damage;
     private void Awake()
     {
         playerGround = GameObject.Find("PlayerGround");
@@ -22,27 +22,31 @@ public class PlayerController : MonoBehaviour
     }
 
     private void Start() {
-        canDrag = true;
     }
     void OnMouseDown()
     {
-        if (!canDrag) return; 
+        if (!GameManager.Instance.canDrag) return; 
         originalPosition = transform.position;
+        isMouseDown = true;
+        transform.localScale = Vector3.one * 0.9f;
     }
 
     void OnMouseDrag()
     {
-        if (!canDrag && previousPos != originalPosition) return; 
-        Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = 0f;
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(mousePosition);
-        transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+        if (!GameManager.Instance.canDrag ) return; 
+        if(isMouseDown )
+        {
+            Vector3 mousePosition = Input.mousePosition;
+            mousePosition.z = 0f;
+            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(mousePosition);
+            transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+        }
         
     }
 
     void OnMouseUp()
     {
-        if (!canDrag) return;
+        if (!GameManager.Instance.canDrag) return;
         CheckPos();
     }
     private void CheckPos()
@@ -53,6 +57,7 @@ public class PlayerController : MonoBehaviour
         if (nearestTile == null || nearestTile == oldTile)
         {
             transform.position = originalPosition;
+            transform.localScale = Vector3.one * 0.75f;
             return;
         }
 
@@ -70,36 +75,32 @@ public class PlayerController : MonoBehaviour
                 occupyingPlayer.UpdateMyLevel();
                 oldTile.RemovePlayer();
                 PlayerManager.Instance.RemovePlayer(this);
+                GameManager.Instance.canDrag = false;
                 Destroy(gameObject);
             }
             else if (occupyingPlayer.level != level)
             {
+                Debug.Log("!= level");
                 nearestTile.RemovePlayer();
                 oldTile.RemovePlayer();
                 nearestTile.SetPlayer(this);
                 oldTile.SetPlayer(occupyingPlayer);
-
                 Vector3 tempPosition = occupyingPlayer.transform.position;
                 occupyingPlayer.transform.position = originalPosition;
                 transform.position = tempPosition;
 
             }
-            else
-            {
-                transform.position = originalPosition;
-            }
         }
-        else
+        transform.localScale = Vector3.one * 0.75f;
+        GameManager.Instance.canDrag = false;
+        if (isMouseDown)
         {
-            transform.position = originalPosition;
+            PlayerManager.Instance.PLayersAttack(); 
+            EnemyManager.Instance.MoveEnemies();
+            EnemyManager.Instance.MoveChest();
+            EnemyManager.Instance.IncreaseClick();
         }
-        canDrag = false;
-        previousPos = originalPosition;
-        PlayerManager.Instance.PLayersAttack(); 
-        EnemyManager.Instance.MoveEnemies();
-        EnemyManager.Instance.MoveChest();
-        EnemyManager.Instance.IncreaseClick();
-        StartCoroutine(ChangeStateDrag());
+        isMouseDown = false;
     }
 
     private void SnapToTile(GroundTile tile)
@@ -123,15 +124,18 @@ public class PlayerController : MonoBehaviour
         bulletCount = level % 5 ;
         if(bulletCount == 0)
             bulletCount = 1;
+        if (level < 5)
+            damage = level;
+        else if (level == 5)
+            damage = 30;
+        else
+            damage  = Mathf.RoundToInt(damage * 1.6f / bulletCount);
         anim.SetTrigger("Attack");
         for(int i = 0;i < bulletCount;i++){
             GameObject bullet =  ObjectPool.instance.SpawnFromPool("Bullet",this.transform.position,Quaternion.identity);
-            bullet.GetComponent<Bullet>().SetDamage(level);
+            bullet.GetComponent<Bullet>().SetDamage(damage);
             yield return new WaitForSeconds(0.05f);
         }
     }
-    private IEnumerator ChangeStateDrag(){
-        yield return new WaitForSeconds(1f);
-        canDrag = true;
-    }
+    
 }

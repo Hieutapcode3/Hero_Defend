@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private int damage;
+    [SerializeField] private GameObject damageTxt;
     private Coroutine disableCoroutine;
 
     void OnEnable()
@@ -34,6 +36,8 @@ public class Bullet : MonoBehaviour
     private void  OnCollisionEnter2D(Collision2D col) {
         if (col.gameObject.CompareTag("Enemy"))
         {
+            TextMeshPro txt = Instantiate(damageTxt, transform.position,Quaternion.identity).GetComponent<TextMeshPro>();
+            txt.text = "-" +  damage.ToString();
             col.gameObject.GetComponent<EnemyController>().TakeDamage(damage);
         }
         else if (col.gameObject.CompareTag("Chest_1"))
@@ -46,7 +50,8 @@ public class Bullet : MonoBehaviour
             EnemyManager.Instance.RemoveChest(col.gameObject);
             Destroy(col.gameObject);
         }
-        this.gameObject.SetActive(false);
+        if(!col.gameObject.CompareTag("Bullet"))
+            this.gameObject.SetActive(false);
     }
     private IEnumerator DisableAfterTime(float time)
     {

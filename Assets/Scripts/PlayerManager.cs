@@ -10,6 +10,10 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
     private List<PlayerController> players;
     private int mainLevel = 1;
     [SerializeField] private Text mainLevelTxt;
+    public override void Awake()
+    {
+        base.Awake();
+    }
     void Start()
     {
         players = new List<PlayerController>(gameObject.GetComponentsInChildren<PlayerController>());
@@ -30,18 +34,18 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         players.Remove(player);
     }
     public void SpawnPlayer(Transform spawnPos,bool isGoldChest){
-        GameObject newPlayerObj = Instantiate(playerPref,spawnPos.position,Quaternion.identity);
-        newPlayerObj.transform.SetParent(this.transform);
-        PlayerController newPlayer = newPlayerObj.GetComponent<PlayerController>();
-        if(!isGoldChest)
-            newPlayer.SetMyLevel(mainLevel);
-        else
-            newPlayer.SetMyLevel(mainLevel + 1);
-        newPlayer.UpdateMyLevel();
-        players.Add(newPlayer);
         GroundTile randomTile = GroundManager.Instance.GetRandomUnoccupiedTile();
         if (randomTile != null)
         {
+            GameObject newPlayerObj = Instantiate(playerPref,spawnPos.position,Quaternion.identity);
+            newPlayerObj.transform.SetParent(this.transform);
+            PlayerController newPlayer = newPlayerObj.GetComponent<PlayerController>();
+            if(!isGoldChest)
+                newPlayer.SetMyLevel(mainLevel);
+            else
+                newPlayer.SetMyLevel(mainLevel + 1);
+            newPlayer.UpdateMyLevel();
+            players.Add(newPlayer);
             StartCoroutine(MovePlayerToTile(newPlayer.gameObject, randomTile));
             randomTile.SetPlayer(newPlayer);
         }
