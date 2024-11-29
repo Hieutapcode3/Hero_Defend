@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Bullet
+  - Chest_1
+  - Chest_2
+  - Enemy
   layers:
   - Default
   - TransparentFX
