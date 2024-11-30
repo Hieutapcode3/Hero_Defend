@@ -6,6 +6,7 @@ public class EnemyController : MonoBehaviour
 {
     [SerializeField] private int health;
     [SerializeField] private TextMeshPro healthTxt;
+    public bool isBoss = false;
     void Start()
     {
         UpdateHealthTxt();
@@ -20,8 +21,13 @@ public class EnemyController : MonoBehaviour
     public void TakeDamage(int damage){
         health -= damage;
         if(health <=0 ){
-            EnemyManager.Instance._score++;
-            EnemyManager.Instance.RemoveEnemy(this);
+            EnemyManager.Instance.IncreaseScore();
+            if(isBoss){
+                EnemyManager.Instance._isBossComing = false;
+                EnemyManager.Instance._isBossAlive = false;
+                PlayerManager.Instance.UpdateMainLevelTxt();
+            }else
+                EnemyManager.Instance.RemoveEnemy(this);
             Destroy(gameObject);
         }
         UpdateHealthTxt();
@@ -44,6 +50,7 @@ public class EnemyController : MonoBehaviour
         }
         this.transform.position = targetPosition;
     }
+
 
 
 }

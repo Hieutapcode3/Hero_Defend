@@ -43,4 +43,8 @@ public class GroundTile : MonoBehaviour
     {
         return CurrentPlayer != null || IsOccupiedByEnemy || IsOccupiedByChest;
     }
+    public override string ToString()
+    {
+        return $"GroundTile (Pos: {Position.x}, {Position.y})";
+    }
 }

@@ -8,8 +8,10 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
 {
     [SerializeField] private GameObject playerPref;
     private List<PlayerController> players;
-    private int mainLevel = 1;
+    private int mainLevel = 0;
     [SerializeField] private Text mainLevelTxt;
+    [SerializeField] private Image weaponImg;
+    [SerializeField] private List<Sprite> weapons;
     public override void Awake()
     {
         base.Awake();
@@ -20,10 +22,6 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         UpdateMainLevelTxt();
     }
     private void Update() {
-        if(Input.GetKeyDown(KeyCode.Space)){
-            mainLevel++;
-            UpdateMainLevelTxt();
-        }
     }
     public void PLayersAttack(){
         foreach(PlayerController player in players){
@@ -66,7 +64,12 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         player.transform.position = targetPosition;
     }
     public void UpdateMainLevelTxt(){
+        mainLevel++;
         mainLevelTxt.text = mainLevel.ToString();
+        if(mainLevel < weapons.Count){
+            weaponImg.sprite = weapons[mainLevel - 1];
+        }else
+            weaponImg.sprite = weapons[weapons.Count - 1];
     }
 
 }

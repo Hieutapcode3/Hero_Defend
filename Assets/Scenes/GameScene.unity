@@ -2271,6 +2271,14 @@ MonoBehaviour:
   dontDestroyOnload: 0
   playerPref: {fileID: 1163210628952089890, guid: 4241f2fe474966b49bd7d577135a6011, type: 3}
   mainLevelTxt: {fileID: 965288011}
+  weaponImg: {fileID: 1483890155}
+  weapons:
+  - {fileID: 21300000, guid: b39964b9b85ae624e8fe670f2ca4bc76, type: 3}
+  - {fileID: 21300000, guid: 1a42fbcbc23306c45858d3b77df48380, type: 3}
+  - {fileID: 21300000, guid: b10c30c340aafb74a8c6e86131672630, type: 3}
+  - {fileID: 21300000, guid: 3a1f2b7b54392b246926cb74bcdb975e, type: 3}
+  - {fileID: 21300000, guid: 19dc246ed05fe114788122c06ad953dc, type: 3}
+  - {fileID: 21300000, guid: 72ceda0197202e0419fa9be32a461685, type: 3}
 --- !u!4 &582985266
 Transform:
   m_ObjectHideFlags: 0
@@ -6043,14 +6051,14 @@ RectTransform:
   m_GameObject: {fileID: 1483890153}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1712102847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 64.012665, y: 15.6294}
+  m_AnchoredPosition: {x: 56.499996, y: 15.6294}
   m_SizeDelta: {x: 46.6581, y: 133.1256}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1483890155
@@ -7458,7 +7466,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 4}
+  m_AnchoredPosition: {x: -12.2, y: 4}
   m_SizeDelta: {x: 150, y: 185}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1849524794
@@ -8123,6 +8131,8 @@ MonoBehaviour:
   silver_chest: {fileID: 5992799183197959724, guid: 941eb2eec5707e14fbd05dacfe7b46e3, type: 3}
   gold_chest: {fileID: 8235484956162508889, guid: 31a65a480e5ebe743b1f832d49f0ac2e, type: 3}
   _score: 0
+  _isBossAlive: 0
+  _isBossComing: 0
 --- !u!1 &1991327283
 GameObject:
   m_ObjectHideFlags: 0

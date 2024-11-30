@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     }
 
     private void Start() {
+        SetDamage();
     }
     void OnMouseDown()
     {
@@ -72,6 +73,7 @@ public class PlayerController : MonoBehaviour
             if (occupyingPlayer.level == level && occupyingPlayer != this)
             {
                 occupyingPlayer.level++;
+                occupyingPlayer.SetDamage();
                 occupyingPlayer.UpdateMyLevel();
                 oldTile.RemovePlayer();
                 PlayerManager.Instance.RemovePlayer(this);
@@ -96,9 +98,17 @@ public class PlayerController : MonoBehaviour
         if (isMouseDown)
         {
             PlayerManager.Instance.PLayersAttack(); 
+            if(EnemyManager.Instance._isBossAlive){
+                if(EnemyManager.Instance.CheckNullBoss()){
+                    EnemyManager.Instance.SpawnBossEnemy();
+                }else
+                    EnemyManager.Instance.MoveBoss();
+            }
             EnemyManager.Instance.MoveEnemies();
             EnemyManager.Instance.MoveChest();
             EnemyManager.Instance.IncreaseClick();
+
+            
         }
         isMouseDown = false;
     }
@@ -124,18 +134,20 @@ public class PlayerController : MonoBehaviour
         bulletCount = level % 5 ;
         if(bulletCount == 0)
             bulletCount = 1;
-        if (level < 5)
-            damage = level;
-        else if (level == 5)
-            damage = 30;
-        else
-            damage  = Mathf.RoundToInt(damage * 1.6f / bulletCount);
         anim.SetTrigger("Attack");
         for(int i = 0;i < bulletCount;i++){
             GameObject bullet =  ObjectPool.instance.SpawnFromPool("Bullet",this.transform.position,Quaternion.identity);
             bullet.GetComponent<Bullet>().SetDamage(damage);
             yield return new WaitForSeconds(0.05f);
         }
+    }
+    public void SetDamage(){
+        if (level < 5)
+            damage = level;
+        else if (level == 5)
+            damage = 30;
+        else
+            damage  = Mathf.RoundToInt(damage * 1.3f / bulletCount);
     }
     
 }
