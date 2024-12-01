@@ -49,6 +49,10 @@ public class Bullet : MonoBehaviour
             PlayerManager.Instance.SpawnPlayer(col.gameObject.transform,true);
             EnemyManager.Instance.RemoveChest(col.gameObject);
             Destroy(col.gameObject);
+        }else if (col.gameObject.CompareTag("Coin"))
+        {
+            GameManager.Instance.UpdateCoinTxt();
+            Destroy(col.gameObject);
         }
         if(!col.gameObject.CompareTag("Bullet"))
             this.gameObject.SetActive(false);

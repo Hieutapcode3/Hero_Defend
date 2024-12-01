@@ -9,15 +9,19 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     [SerializeField] private int maxEnemiesToSpawn = 3;
     [SerializeField] private GameObject silver_chest;
     [SerializeField] private GameObject gold_chest;
+    [SerializeField] private GameObject coinPref;
+    private List<GameObject> coins = new List<GameObject>();
     private List<GameObject> chests = new List<GameObject>();
     private List<EnemyController> enemies = new List<EnemyController>();
-    public int _score = 0;
-    private int _clickAmount = -1;
     private int _nextBigEnemyScoreThreshold = 20;
     private int _nextBossEnemyScoreThreshold = 50;
-    public bool _isBossAlive = false; 
-    public bool _isBossComing = false;
     private EnemyController boss;
+    public int clickAmount = -1;
+    public int score = 0;
+    public bool isBossAlive = false; 
+    public bool isBossComing = false;
+    public bool luckytime;
+    public int posStartLucky = 0;
 
     public override void Awake()
     {
@@ -31,7 +35,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
 
     public void SpawnEnemiesOnFirstRow()
     {
-        if (_isBossAlive) return;
+        if (isBossAlive) return;
 
         List<GroundTile> firstRowTiles = GroundManager.Instance.GetFirstRowTilesOfEnemyGround();
         List<GroundTile> availableTiles = new List<GroundTile>(firstRowTiles.FindAll(tile => !tile.IsOccupied()));
@@ -59,18 +63,18 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
 
     private int CalculateHealth()
     {
-        if (_score <= 1)
+        if (score <= 1)
         {
             return 1;
         }
-        else if (_score <= 2)
+        else if (score <= 2)
         {
             return Random.Range(1, 3);
         }
         else
         {
-            int minHealth = _score / 3;
-            int maxHealth = Mathf.Max(minHealth + 1, _score / 2);
+            int minHealth = score / 3;
+            int maxHealth = Mathf.Max(minHealth + 1, score / 2);
             return Random.Range(minHealth, maxHealth + 1);
         }
     }
@@ -89,7 +93,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             
             if (bigEnemyController != null)
             {
-                int bigEnemyHealth = Mathf.RoundToInt(_score * 1.2f);
+                int bigEnemyHealth = Mathf.RoundToInt(score * 1.2f);
                 bigEnemyController.SetHealth(bigEnemyHealth);
             }
             
@@ -107,7 +111,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
 
         GroundTile tile = availableTiles[Random.Range(0, availableTiles.Count)];
         GameObject bossPrefab;
-        if (_score < 200)
+        if (score < 200)
         {
             bossPrefab = enemyPrefabs[Random.Range(4, 6)];
         }
@@ -122,28 +126,28 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         bossController.isBoss = true;
         if (bossController != null)
         {
-            int bossHealth = _score * (_score / 50) * 2;
+            int bossHealth = score * (score / 50) * 2;
             bossController.SetHealth(bossHealth);
             boss = bossController;
         }
-        _isBossAlive = true;
+        isBossAlive = true;
         _nextBossEnemyScoreThreshold += 50;
     }
 
 
     public void IncreaseScore()
     {
-        _score++;
-        if (_score >= _nextBossEnemyScoreThreshold)
+        score++;
+        if (score >= _nextBossEnemyScoreThreshold)
         {
-            _isBossComing = true;
-            if(_isBossAlive && _isBossComing){
+            isBossComing = true;
+            if(isBossAlive && isBossComing){
                 SpawnBossEnemy();
                 _nextBossEnemyScoreThreshold += 50;
                 Debug.Log("why don't plus");
             }
         }
-        else if (_score >= _nextBigEnemyScoreThreshold && !_isBossComing)
+        else if (score >= _nextBigEnemyScoreThreshold && !isBossComing)
         {
             SpawnBigEnemy();
             _nextBigEnemyScoreThreshold += 20;
@@ -151,7 +155,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     }
     private void CheckEmptyEnemyAndChest(){
         if(chests.Count==0 && enemies.Count ==0){
-            _isBossAlive = true;
+            isBossAlive = true;
         }
     }
     public void MoveBoss(){
@@ -159,9 +163,9 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     }
     public void IncreaseClick()
     {
-        if(!_isBossComing){
-            _clickAmount += 1;
-            if (_clickAmount % 2 == 0)
+        if(!isBossComing){
+            clickAmount += 1;
+            if (clickAmount % 2 == 0 && !luckytime)
             {
                 SpawnChest();
             }
@@ -200,7 +204,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
                 enemy.StartCoroutine(enemy.MoveMent());
             }
         }
-        if(!_isBossComing)
+        if(!isBossComing && !luckytime)
             SpawnEnemiesOnFirstRow();
     }
 
@@ -214,7 +218,50 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             }
         }
     }
-
+    public void StartLuckyTime()
+    {
+        if(luckytime)
+        {
+            if (posStartLucky >= clickAmount - 2)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    if (i <= 1)
+                    {
+                        SpawnChest();
+                    }
+                    else
+                    {
+                        List<GroundTile> firstRowTiles = GroundManager.Instance.GetFirstRowTilesOfEnemyGround();
+                        List<GroundTile> availableTiles = new List<GroundTile>(firstRowTiles.FindAll(tile => !tile.IsOccupied()));
+                        if (availableTiles.Count > 0)
+                        {
+                            GroundTile randomTile = availableTiles[Random.Range(0, availableTiles.Count)];
+                            GameObject coin = Instantiate(coinPref, randomTile.transform.position, Quaternion.identity);
+                            coins.Add(coin);
+                        }
+                    }
+                }
+            }
+            else
+                luckytime = false;
+        }
+    }
+    public void MoveCoins()
+    {
+        if (coins.Count != 0)
+        {
+            foreach (GameObject coin in coins)
+            {
+                if(coin != null)
+                    StartCoroutine(MoveMent(coin.transform));
+            }
+        }
+    }
+    public void RemoveCoin(GameObject coin)
+    {
+        coins.Remove(coin);
+    }
     public void RemoveEnemy(EnemyController enemy)
     {
         GroundTile tile = GroundManager.Instance.GetTileAtPosition(enemy.transform.position);
@@ -254,4 +301,5 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             obj.position = targetPosition;
         }
     }
+
 }

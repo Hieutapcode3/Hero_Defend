@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviour
     }
     void OnMouseDown()
     {
-        if (!GameManager.Instance.canDrag) return; 
+        if (!GameManager.Instance.canDrag || GameManager.Instance.isLose) return; 
         originalPosition = transform.position;
         isMouseDown = true;
         transform.localScale = Vector3.one * 0.9f;
@@ -34,7 +34,7 @@ public class PlayerController : MonoBehaviour
 
     void OnMouseDrag()
     {
-        if (!GameManager.Instance.canDrag ) return; 
+        if (!GameManager.Instance.canDrag || GameManager.Instance.isLose) return; 
         if(isMouseDown )
         {
             Vector3 mousePosition = Input.mousePosition;
@@ -47,7 +47,7 @@ public class PlayerController : MonoBehaviour
 
     void OnMouseUp()
     {
-        if (!GameManager.Instance.canDrag) return;
+        if (!GameManager.Instance.canDrag || GameManager.Instance.isLose) return;
         CheckPos();
     }
     private void CheckPos()
@@ -98,14 +98,16 @@ public class PlayerController : MonoBehaviour
         if (isMouseDown)
         {
             PlayerManager.Instance.PLayersAttack(); 
-            if(EnemyManager.Instance._isBossAlive){
+            if(EnemyManager.Instance.isBossAlive){
                 if(EnemyManager.Instance.CheckNullBoss()){
                     EnemyManager.Instance.SpawnBossEnemy();
                 }else
                     EnemyManager.Instance.MoveBoss();
             }
+            //EnemyManager.Instance.StartLuckyTime();
             EnemyManager.Instance.MoveEnemies();
             EnemyManager.Instance.MoveChest();
+            EnemyManager.Instance.MoveCoins();
             EnemyManager.Instance.IncreaseClick();
 
             
@@ -131,23 +133,26 @@ public class PlayerController : MonoBehaviour
 
     }
     public IEnumerator Attack(){
-        bulletCount = level % 5 ;
-        if(bulletCount == 0)
-            bulletCount = 1;
         anim.SetTrigger("Attack");
         for(int i = 0;i < bulletCount;i++){
             GameObject bullet =  ObjectPool.instance.SpawnFromPool("Bullet",this.transform.position,Quaternion.identity);
-            bullet.GetComponent<Bullet>().SetDamage(damage);
+            if(level <=5)
+                bullet.GetComponent<Bullet>().SetDamage(damage);
+            else
+                bullet.GetComponent<Bullet>().SetDamage(damage / bulletCount);
             yield return new WaitForSeconds(0.05f);
         }
     }
     public void SetDamage(){
+        bulletCount = level % 5 ;
+        if(bulletCount == 0)
+            bulletCount = 1;
         if (level < 5)
             damage = level;
         else if (level == 5)
             damage = 30;
         else
-            damage  = Mathf.RoundToInt(damage * 1.3f / bulletCount);
+            damage  = Mathf.RoundToInt(damage * 1.3f);
     }
     
 }

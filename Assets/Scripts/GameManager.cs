@@ -12,6 +12,9 @@ public class GameManager : ManualSingletonMono<GameManager>
     [SerializeField] private GameObject losePanel;
     [SerializeField] private GameObject winGamePanel;
     public bool canDrag;
+    public bool isLose;
+    private int coinAmount = -1;
+    [SerializeField] private Text coinTxt;
 
     public override void Awake()
     {
@@ -22,6 +25,7 @@ public class GameManager : ManualSingletonMono<GameManager>
     {
         Time.timeScale = 1;
         canDrag = true;
+        isLose = false;
     }
     private void Update()
     {
@@ -102,5 +106,10 @@ public class GameManager : ManualSingletonMono<GameManager>
     {
         yield return new WaitForSeconds(1f);
         canDrag = true;
+    }
+    public void UpdateCoinTxt()
+    {
+        coinAmount++;
+        coinTxt.text = coinAmount.ToString();
     }
 }

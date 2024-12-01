@@ -8,15 +8,10 @@ public class DamageTxt : MonoBehaviour
     public float moveSpeed = 1f;
     public float fadeSpeed = 1f;
     private TextMeshPro textMesh;
-    private Color originalColor;
 
     private void Start()
     {
         textMesh = GetComponent<TextMeshPro>();
-        if (textMesh != null)
-        {
-            originalColor = textMesh.faceColor;
-        }
     }
 
     private void Update()
