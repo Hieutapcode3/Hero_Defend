@@ -51,6 +51,7 @@ public class Bullet : MonoBehaviour
             Destroy(col.gameObject);
         }else if (col.gameObject.CompareTag("Coin"))
         {
+            AudioManager.Instance.PlayAudioCollisionCoin();
             GameManager.Instance.UpdateCoinTxt();
             Destroy(col.gameObject);
         }

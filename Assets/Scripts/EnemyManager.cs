@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Hyb.Utils;
+using DG.Tweening;
+using UnityEngine.UI;
+using TMPro;
 
 public class EnemyManager : ManualSingletonMono<EnemyManager>
 {
@@ -10,6 +13,9 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     [SerializeField] private GameObject silver_chest;
     [SerializeField] private GameObject gold_chest;
     [SerializeField] private GameObject coinPref;
+    [SerializeField] private Text scoreTxt;
+    [SerializeField] private GameObject damageTxt;
+
     private List<GameObject> coins = new List<GameObject>();
     private List<GameObject> chests = new List<GameObject>();
     private List<EnemyController> enemies = new List<EnemyController>();
@@ -31,6 +37,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     void Start()
     {
         SpawnEnemiesOnFirstRow();
+        UpdateScoreTxt();
     }
 
     public void SpawnEnemiesOnFirstRow()
@@ -48,7 +55,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             GroundTile tile = availableTiles[randomIndex];
             availableTiles.RemoveAt(randomIndex);
             GameObject enemyPrefab = enemyPrefabs[Random.Range(0, 3)];
-            GameObject newEnemy = Instantiate(enemyPrefab, tile.transform.position, Quaternion.identity);
+            GameObject newEnemy = Instantiate(enemyPrefab, tile.transform.position + new Vector3(0,0.5f,0), Quaternion.identity);
             newEnemy.transform.SetParent(this.transform);
             EnemyController enemyController = newEnemy.GetComponent<EnemyController>();
             if (enemyController != null)
@@ -87,7 +94,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         {
             GroundTile tile = availableTiles[Random.Range(0, availableTiles.Count)];
             GameObject bigEnemyPrefab = enemyPrefabs[3]; 
-            GameObject bigEnemy = Instantiate(bigEnemyPrefab, tile.transform.position, Quaternion.identity);
+            GameObject bigEnemy = Instantiate(bigEnemyPrefab, tile.transform.position + Vector3.up * 0.5f, Quaternion.identity);
             bigEnemy.transform.SetParent(this.transform);
             EnemyController bigEnemyController = bigEnemy.GetComponent<EnemyController>();
             
@@ -101,6 +108,21 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             enemies.Add(bigEnemy.GetComponent<EnemyController>());
         }
     }
+    public void EnemyTakeDamage()
+    {
+        for (int i = enemies.Count - 1; i >= 0; i--)
+        {
+            TextMeshPro txt = Instantiate(damageTxt, enemies[i].transform.position,Quaternion.identity).GetComponent<TextMeshPro>();
+            txt.text = "-" +  score.ToString();
+            enemies[i].TakeDamage(score);
+        }
+
+        if (boss != null)
+        {
+            boss.TakeDamage(score);
+        }
+    }
+
     public bool CheckNullBoss(){
         return boss == null;
     }
@@ -120,7 +142,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
             bossPrefab = enemyPrefabs[Random.Range(6, enemyPrefabs.Count)];
         }
 
-        GameObject bossEnemy = Instantiate(bossPrefab, tile.transform.position, Quaternion.identity);
+        GameObject bossEnemy = Instantiate(bossPrefab, tile.transform.position + Vector3.up * .5f, Quaternion.identity);
         bossEnemy.transform.SetParent(this.transform);
         EnemyController bossController = bossEnemy.GetComponent<EnemyController>();
         bossController.isBoss = true;
@@ -138,13 +160,14 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
     public void IncreaseScore()
     {
         score++;
+        UpdateScoreTxt();
         if (score >= _nextBossEnemyScoreThreshold)
         {
             isBossComing = true;
             if(isBossAlive && isBossComing){
+                Debug.Log("spawn Boss");
                 SpawnBossEnemy();
                 _nextBossEnemyScoreThreshold += 50;
-                Debug.Log("why don't plus");
             }
         }
         else if (score >= _nextBigEnemyScoreThreshold && !isBossComing)
@@ -154,7 +177,7 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         }
     }
     private void CheckEmptyEnemyAndChest(){
-        if(chests.Count==0 && enemies.Count ==0){
+        if(chests.Count==0 && enemies.Count ==0 && isBossComing){
             isBossAlive = true;
         }
     }
@@ -179,11 +202,21 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         if (availableTiles.Count > 0)
         {
             GroundTile randomTile = availableTiles[Random.Range(0, availableTiles.Count)];
-            GameObject chestPrefab = Random.value < 0.6f ? silver_chest : gold_chest;
-            GameObject newChest = Instantiate(chestPrefab, randomTile.transform.position, Quaternion.identity);
+            GameObject chestPrefab = Random.value < 0.7f ? silver_chest : gold_chest;
+            GameObject newChest = Instantiate(chestPrefab, randomTile.transform.position + Vector3.up * 0.5f, Quaternion.identity);
+            newChest.transform.localScale = Vector3.one * 2;
+            StartAnimChest(newChest);
             randomTile.SetChest();
             chests.Add(newChest);
         }
+    }
+    private void StartAnimChest(GameObject obj){
+        obj.transform.DOMoveY(obj.transform.position.y - 0.5f,0.5f).SetEase(Ease.Linear);
+        obj.transform.DOScale(.9f,0.5f).SetEase(Ease.Linear);
+    }
+    private void StartAnimCoin(GameObject obj){
+        obj.transform.DOMoveY(obj.transform.position.y - 0.5f,0.5f).SetEase(Ease.Linear);
+        obj.transform.DOScale(.15f,0.5f).SetEase(Ease.Linear);
     }
 
     public void MoveEnemies()
@@ -214,39 +247,59 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         {
             foreach (GameObject chest in chests)
             {
-                StartCoroutine(MoveMent(chest.transform));
+                if(chest!=null)
+                    StartCoroutine(MoveMent(chest.transform));
             }
         }
     }
     public void StartLuckyTime()
     {
-        if(luckytime)
+        if (luckytime)
         {
-            if (posStartLucky >= clickAmount - 2)
+            if (posStartLucky >= clickAmount - 1)
             {
-                for (int i = 0; i < 6; i++)
+                List<GroundTile> firstRowTiles = GroundManager.Instance.GetFirstRowTilesOfEnemyGround();
+                List<GroundTile> shuffledTiles = new List<GroundTile>(firstRowTiles);
+                for (int i = shuffledTiles.Count - 1; i > 0; i--)
                 {
-                    if (i <= 1)
-                    {
-                        SpawnChest();
-                    }
-                    else
-                    {
-                        List<GroundTile> firstRowTiles = GroundManager.Instance.GetFirstRowTilesOfEnemyGround();
-                        List<GroundTile> availableTiles = new List<GroundTile>(firstRowTiles.FindAll(tile => !tile.IsOccupied()));
-                        if (availableTiles.Count > 0)
-                        {
-                            GroundTile randomTile = availableTiles[Random.Range(0, availableTiles.Count)];
-                            GameObject coin = Instantiate(coinPref, randomTile.transform.position, Quaternion.identity);
-                            coins.Add(coin);
-                        }
-                    }
+                    int randomIndex = Random.Range(0, i + 1);
+                    GroundTile temp = shuffledTiles[i];
+                    shuffledTiles[i] = shuffledTiles[randomIndex];
+                    shuffledTiles[randomIndex] = temp;
+                }
+                List<GroundTile> chestTiles = shuffledTiles.GetRange(0, 2);
+                List<GroundTile> coinTiles = shuffledTiles.GetRange(2, shuffledTiles.Count - 2);
+                List<GroundTile> availableChestTiles = new List<GroundTile>(chestTiles.FindAll(tile => !tile.IsOccupied()));
+                for (int i = 0; i < 2 && availableChestTiles.Count > 0; i++)
+                {
+                    GroundTile randomTile = availableChestTiles[Random.Range(0, availableChestTiles.Count)];
+                    GameObject chestPrefab = Random.value < 0.6f ? silver_chest : gold_chest;
+                    GameObject newChest = Instantiate(chestPrefab, randomTile.transform.position + Vector3.up * 0.5f, Quaternion.identity);
+                    newChest.transform.localScale = Vector3.one * 2;
+                    StartAnimChest(newChest);
+                    randomTile.SetChest();
+                    chests.Add(newChest);
+                    availableChestTiles.Remove(randomTile);
+                }
+                List<GroundTile> availableCoinTiles = new List<GroundTile>(coinTiles.FindAll(tile => !tile.IsOccupied()));
+                for (int i = 0; i < 4 && availableCoinTiles.Count > 0; i++)
+                {
+                    GroundTile randomTile = availableCoinTiles[Random.Range(0, availableCoinTiles.Count)];
+                    GameObject coin = Instantiate(coinPref, randomTile.transform.position + Vector3.up * 0.5f, Quaternion.identity);
+                    coin.transform.localScale = Vector3.one * .2f;
+                    StartAnimCoin(coin);
+                    coins.Add(coin);
+                    availableCoinTiles.Remove(randomTile);
                 }
             }
             else
+            {
                 luckytime = false;
+            }
         }
     }
+
+
     public void MoveCoins()
     {
         if (coins.Count != 0)
@@ -300,6 +353,9 @@ public class EnemyManager : ManualSingletonMono<EnemyManager>
         {
             obj.position = targetPosition;
         }
+    }
+    private void UpdateScoreTxt(){
+        scoreTxt.text = "SCORE: " + score.ToString();
     }
 
 }

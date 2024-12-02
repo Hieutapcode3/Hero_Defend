@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,34 +6,133 @@ using Hyb.Utils;
 
 public class GameManager : ManualSingletonMono<GameManager>
 {
-    public bool isMuted;
-    [SerializeField] private GameObject successPanel;
+    private bool isMuted;
+    private bool isVibrationEnabled; 
+
     [SerializeField] private GameObject losePanel;
-    [SerializeField] private GameObject winGamePanel;
+    [SerializeField] private Transform posSpawnPlayerForBuy;
+    [SerializeField] private Toggle musicToggle;
+    [SerializeField] private Toggle vibrationToggle; 
+
     public bool canDrag;
     public bool isLose;
-    private int coinAmount = -1;
+    [SerializeField] private int coinAmount = -1;
     [SerializeField] private Text coinTxt;
+    private const string CoinKey = "CoinAmount";
+    private const string MusicKey = "MusicMuted";
+    private const string VibrationKey = "VibrationEnabled";
 
     public override void Awake()
     {
         base.Awake();
-    }
+        LoadSettings(); 
 
+        if (coinTxt != null)
+            LoadCoins();
+    }
     private void Start()
     {
         Time.timeScale = 1;
         canDrag = true;
         isLose = false;
+
+        if (coinTxt != null)
+            UpdateCoinTxt();
+        if (musicToggle != null)
+            musicToggle.onValueChanged.AddListener(OnMusicToggleChanged);
+
+        if (vibrationToggle != null)
+            vibrationToggle.onValueChanged.AddListener(OnVibrationToggleChanged);
+
+        UpdateToggleUI();
     }
+
     private void Update()
     {
-        if (!canDrag)
+        // if (!canDrag)
+        // {
+        //     StartCoroutine(ChangeStateDrag());
+        // }
+
+    }
+
+    public void VibrateDevice()
+    {
+        if (isVibrationEnabled)
         {
-            StartCoroutine(ChangeStateDrag());
+            Handheld.Vibrate(); 
+            Debug.Log("Vibrate");
         }
     }
 
+    private void SaveSettings()
+    {
+        PlayerPrefs.SetInt(MusicKey, isMuted ? 1 : 0);
+        PlayerPrefs.SetInt(VibrationKey, isVibrationEnabled ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadSettings()
+    {
+        isMuted = PlayerPrefs.GetInt(MusicKey, 0) == 1;
+        isVibrationEnabled = PlayerPrefs.GetInt(VibrationKey, 1) == 1;
+    }
+
+    private void UpdateToggleUI()
+    {
+        if (musicToggle != null)
+            musicToggle.isOn = !isMuted;
+
+        if (vibrationToggle != null)
+            vibrationToggle.isOn = isVibrationEnabled;
+    }
+
+    public void OnMusicToggleChanged(bool value)
+    {
+        isMuted = !value;
+        SaveSettings();
+        AudioManager.Instance.audioSource.mute = isMuted; 
+    }
+
+    public void OnVibrationToggleChanged(bool value)
+    {
+        isVibrationEnabled = value;
+        SaveSettings();
+    }
+
+    public void UpdateCoinTxt()
+    {
+        coinAmount++;
+        coinTxt.text = coinAmount.ToString();
+        SaveCoins();
+    }
+
+    private void SaveCoins()
+    {
+        PlayerPrefs.SetInt(CoinKey, coinAmount);
+        PlayerPrefs.Save();
+    }
+    public IEnumerator ChangeStateDrag()
+    {
+        yield return new WaitForSeconds(.5f);
+        canDrag = true;
+    }
+    private void LoadCoins()
+    {
+        coinAmount = PlayerPrefs.GetInt(CoinKey, 0);
+        coinTxt.text = coinAmount.ToString();
+    }
+
+    public void BuySkill_1()
+    {
+        if (coinAmount >= 100)
+        {
+            PlayerManager.Instance.PLayersAttack();
+            coinAmount -= 100;
+            SaveCoins();
+            LoadCoins();
+        }
+    }
     public void PlayGame()
     {
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
@@ -44,6 +142,7 @@ public class GameManager : ManualSingletonMono<GameManager>
             SceneManager.LoadScene(nextSceneIndex);
         }
     }
+
     public void ReloadScene()
     {
         Time.timeScale = 1;
@@ -64,52 +163,35 @@ public class GameManager : ManualSingletonMono<GameManager>
     {
         Time.timeScale = 1;
     }
-
-    public void ActiveSuccessPanel()
+    public void BuyPlayer()
     {
-        if(SceneManager.GetActiveScene().buildIndex != SceneManager.sceneCountInBuildSettings - 1){
-            StartCoroutine(SuccessCroutine());
+        if (coinAmount >= 50)
+        {
+            PlayerManager.Instance.SpawnPlayer(posSpawnPlayerForBuy, false);
+            coinAmount -= 50;
+            SaveCoins();
+            LoadCoins();
         }
-        else{
-            StartCoroutine(WinCroutine());
+    }
+    public void BuySkill_2(){
+        if(coinAmount >= 150){
+            EnemyManager.Instance.EnemyTakeDamage();
+            coinAmount -= 150;
+            SaveCoins();
+            LoadCoins();
         }
     }
-
-    IEnumerator SuccessCroutine()
-    {
-        yield return new WaitForSeconds(1f);
-        // AudioManager.Instance.PlayAudioSuccessGame();
-        successPanel.SetActive(true);
-        Time.timeScale = 0;
-    }
-    IEnumerator WinCroutine()
-    {
-        yield return new WaitForSeconds(1f);
-        // AudioManager.Instance.PlayAudioSuccessGame();
-        winGamePanel.SetActive(true);
-        Time.timeScale = 0;
-    }
-
-    public void ActiveLosePanel()
+     public void ActiveLosePanel()
     {
         StartCoroutine(LoseCroutine());
     }
 
     IEnumerator LoseCroutine()
     {
+        VibrateDevice();
+        AudioManager.Instance.PlayAudioFailGame();
         yield return new WaitForSeconds(1f);
-        // AudioManager.Instance.PlayAudioFailGame();
         losePanel.SetActive(true);
         Time.timeScale = 0;
-    }
-    private IEnumerator ChangeStateDrag()
-    {
-        yield return new WaitForSeconds(1f);
-        canDrag = true;
-    }
-    public void UpdateCoinTxt()
-    {
-        coinAmount++;
-        coinTxt.text = coinAmount.ToString();
     }
 }

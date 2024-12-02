@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using DG.Tweening;
 
 public class EnemyController : MonoBehaviour
 {
@@ -10,13 +11,17 @@ public class EnemyController : MonoBehaviour
     public bool isBoss = false;
     private BoxCollider2D col;
     private bool isIdleAnimating = true;
-    private Coroutine idleCoroutine; 
-
-    void Start()
+    private Coroutine idleCoroutine;
+    private Vector3 initialPosition;
+    IEnumerator Start()
     {
+        transform.localScale = Vector3.one * 2;
+        StartAnim();
         col = GetComponent<BoxCollider2D>();
+        yield return new WaitForSeconds(0.5f);
+        initialPosition = transform.position; 
         UpdateHealthTxt();
-        idleCoroutine = StartCoroutine(IdleAnimation()); 
+        idleCoroutine = StartCoroutine(IdleAnimation());
     }
 
     public void SetHealth(int health)
@@ -25,6 +30,10 @@ public class EnemyController : MonoBehaviour
         UpdateHealthTxt();
     }
 
+    private void StartAnim(){
+        transform.DOMoveY(transform.position.y - 0.5f,0.5f).SetEase(Ease.Linear);
+        transform.DOScale(1,0.5f).SetEase(Ease.Linear);
+    }
     public int GetHealth()
     {
         return health;
@@ -44,10 +53,11 @@ public class EnemyController : MonoBehaviour
                 PlayerManager.Instance.UpdateMainLevelTxt();
                 EnemyManager.Instance.luckytime = true;
                 EnemyManager.Instance.posStartLucky = EnemyManager.Instance.clickAmount;
-                EnemyManager.Instance.StartLuckyTime();
             }
             else
+            {
                 EnemyManager.Instance.RemoveEnemy(this);
+            }
             Destroy(gameObject);
         }
         UpdateHealthTxt();
@@ -65,21 +75,23 @@ public class EnemyController : MonoBehaviour
             StopCoroutine(idleCoroutine);
             idleCoroutine = null;
         }
+        transform.position = initialPosition;
 
-        Vector3 startPosition = this.transform.position;
-        Vector3 targetPosition = startPosition - new Vector3(0, 0.5f, 0);
+        Vector3 targetPosition = initialPosition - new Vector3(0, 0.5f, 0);
         float elapsedTime = 0f;
         float moveDuration = 0.5f;
 
         while (elapsedTime < moveDuration)
         {
-            this.transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / moveDuration);
+            transform.position = Vector3.Lerp(initialPosition, targetPosition, elapsedTime / moveDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        this.transform.position = targetPosition;
-        idleCoroutine = StartCoroutine(IdleAnimation());
+        transform.position = targetPosition;
+        initialPosition = targetPosition; 
+
+        idleCoroutine = StartCoroutine(IdleAnimation()); 
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -94,7 +106,7 @@ public class EnemyController : MonoBehaviour
 
     private IEnumerator IdleAnimation()
     {
-        Vector3 startPosition = transform.position;
+        Vector3 startPosition = initialPosition; 
         float amplitude = 0.05f;
         float frequency = 3f;
 

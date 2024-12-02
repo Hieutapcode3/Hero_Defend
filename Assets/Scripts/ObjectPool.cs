@@ -55,7 +55,7 @@ public class ObjectPool : MonoBehaviour
         GameObject objectToSpawn = poolDictionary[tag].Dequeue();
         objectToSpawn.SetActive(true);
         objectToSpawn.transform.position = position;
-        objectToSpawn.transform.rotation = Quaternion.Euler(0, 0, rotation.eulerAngles.z);
+        objectToSpawn.transform.rotation = Quaternion.Euler(0, 0, 0);
 
         poolDictionary[tag].Enqueue(objectToSpawn);
 

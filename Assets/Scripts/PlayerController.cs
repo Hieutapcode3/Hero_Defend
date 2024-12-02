@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private GameObject playerGround;
     [SerializeField] private TextMeshPro myLevel;
     [SerializeField] private SpriteRenderer myWeapon;
     [SerializeField] private List<Sprite> weaponsSprite;
@@ -17,12 +16,16 @@ public class PlayerController : MonoBehaviour
     private int damage;
     private void Awake()
     {
-        playerGround = GameObject.Find("PlayerGround");
         anim = GetComponent<Animator>();
     }
 
     private void Start() {
         SetDamage();
+    }
+    private void Update() {
+        if(damage == 0)
+            damage  = Mathf.RoundToInt(30 * Mathf.Pow(1.4f,(level - 5)));
+ 
     }
     void OnMouseDown()
     {
@@ -61,7 +64,7 @@ public class PlayerController : MonoBehaviour
             transform.localScale = Vector3.one * 0.75f;
             return;
         }
-
+        bool isMerge = false;
         if (!nearestTile.IsOccupied())
         {
             oldTile.RemovePlayer();
@@ -72,17 +75,18 @@ public class PlayerController : MonoBehaviour
             PlayerController occupyingPlayer = nearestTile.CurrentPlayer;
             if (occupyingPlayer.level == level && occupyingPlayer != this)
             {
+                isMerge = true;
                 occupyingPlayer.level++;
                 occupyingPlayer.SetDamage();
                 occupyingPlayer.UpdateMyLevel();
                 oldTile.RemovePlayer();
                 PlayerManager.Instance.RemovePlayer(this);
-                GameManager.Instance.canDrag = false;
+                AudioManager.Instance.PlayAudioMergePlayer();
+                // GameManager.Instance.canDrag = false;
                 Destroy(gameObject);
             }
             else if (occupyingPlayer.level != level)
             {
-                Debug.Log("!= level");
                 nearestTile.RemovePlayer();
                 oldTile.RemovePlayer();
                 nearestTile.SetPlayer(this);
@@ -94,25 +98,29 @@ public class PlayerController : MonoBehaviour
             }
         }
         transform.localScale = Vector3.one * 0.75f;
-        GameManager.Instance.canDrag = false;
+        // GameManager.Instance.canDrag = false;
         if (isMouseDown)
         {
+            if(!isMerge)
+                AudioManager.Instance.PlayAudioDrop();
             PlayerManager.Instance.PLayersAttack(); 
-            if(EnemyManager.Instance.isBossAlive){
+            if(EnemyManager.Instance.isBossAlive && EnemyManager.Instance.isBossComing){
                 if(EnemyManager.Instance.CheckNullBoss()){
                     EnemyManager.Instance.SpawnBossEnemy();
                 }else
                     EnemyManager.Instance.MoveBoss();
             }
-            //EnemyManager.Instance.StartLuckyTime();
             EnemyManager.Instance.MoveEnemies();
             EnemyManager.Instance.MoveChest();
             EnemyManager.Instance.MoveCoins();
+            EnemyManager.Instance.StartLuckyTime();
             EnemyManager.Instance.IncreaseClick();
 
             
         }
         isMouseDown = false;
+        GameManager.Instance.canDrag = false;
+        GameManager.Instance.StartCoroutine(GameManager.Instance.ChangeStateDrag());
     }
 
     private void SnapToTile(GroundTile tile)
@@ -140,7 +148,7 @@ public class PlayerController : MonoBehaviour
                 bullet.GetComponent<Bullet>().SetDamage(damage);
             else
                 bullet.GetComponent<Bullet>().SetDamage(damage / bulletCount);
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
     public void SetDamage(){
@@ -152,7 +160,7 @@ public class PlayerController : MonoBehaviour
         else if (level == 5)
             damage = 30;
         else
-            damage  = Mathf.RoundToInt(damage * 1.3f);
+            damage  = Mathf.RoundToInt(damage * 1.4f);
     }
     
 }

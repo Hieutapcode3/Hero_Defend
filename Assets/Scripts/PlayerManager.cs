@@ -21,8 +21,6 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         players = new List<PlayerController>(gameObject.GetComponentsInChildren<PlayerController>());
         UpdateMainLevelTxt();
     }
-    private void Update() {
-    }
     public void PLayersAttack(){
         foreach(PlayerController player in players){
             player.StartCoroutine(player.Attack());
@@ -32,6 +30,7 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         players.Remove(player);
     }
     public void SpawnPlayer(Transform spawnPos,bool isGoldChest){
+        // GameManager.Instance.canDrag = false;
         GroundTile randomTile = GroundManager.Instance.GetRandomUnoccupiedTile();
         if (randomTile != null)
         {
@@ -53,7 +52,7 @@ public class PlayerManager : ManualSingletonMono<PlayerManager>
         Vector3 startPosition = player.transform.position;
         Vector3 targetPosition = targetTile.transform.position;
         float elapsedTime = 0f;
-        float moveDuration = 0.25f; 
+        float moveDuration = 0.2f; 
 
         while (elapsedTime < moveDuration)
         {
